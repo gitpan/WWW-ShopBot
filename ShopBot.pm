@@ -4,7 +4,7 @@ use strict;
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(list_drivers);
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 use Carp qw(confess);
 
 sub new {
@@ -15,13 +15,14 @@ sub new {
 	drivers   => (($arg->{drivers} ? $arg->{drivers} : $arg->{merchants}) || die "No drivers given at line $line in $0\n"),
 	pick      => $arg->{pick} || [ 'product', 'price' ],
 	proxy     => $arg->{proxy},
+	login     => $arg->{login},
     }, $pkg;
 }
 
 # discard unwanted information
 sub sift {
     caller eq __PACKAGE__ or die "It's private method.\n";
-    my($result, $criteria) = @_;
+    my($result, $criteria, $driver) = @_;
 
     foreach my $r (@{$result}){
 	unless( $r->{product} && $r->{price} ){
@@ -54,17 +55,26 @@ sub sift {
 		next;
 	    }
 	}
+	$r->{driver} = $driver;
     }
 }
 
 sub query {
     my $pkg = shift;
     my $criteria = ref($_[0]) ? $_[0] : @_ == 1 ? {product => $_[0]} : {@_};
-    my (@pool, $result);
+    my (@pool, $result, $user, $pass);
     foreach my $driver (@{$pkg->{drivers}}){
 	$driver =~ s/^WWW::ShopBot:://;
+	$user = $pkg->{login}->{$driver}->{user};
+	$pass = $pkg->{login}->{$driver}->{pass};
 	eval 'use WWW::ShopBot::'.$driver.';
-	$result = WWW::ShopBot::'.$driver.'::query( $criteria->{product} );
+	$result = WWW::ShopBot::'.$driver.'::query(
+                                  $criteria->{product},
+                                  $pkg->{proxy},
+                                  $user,
+                                  $pass,
+                                  $pkg->{jar},
+                                  );
 	sift($result, $criteria, $driver);
 	push @pool, grep { scalar %$_ } @$result;';
 	confess "Driver error: $driver\n$@" if $@;
@@ -72,9 +82,11 @@ sub query {
     return sort {$a->{price} <=> $b->{price}} @pool;
 }
 
+use File::Find::Rule;
 sub list_drivers {
-    my @driver = sort grep {$_} map { map{s,/,::,g} map{print $_; m,WWW/ShopBot/(.+)\.pm,;$1} glob "$_/WWW/ShopBot/*pm" } @INC;
-    wantarray ? @driver : \@driver;
+    my @files = sort grep{$_} map{s,/,::,g;$_} map{m,WWW/ShopBot/(.+)\.pm,;$1}
+      File::Find::Rule->file()->name( '*.pm' )->in( map{$_.'/WWW/ShopBot/'} @INC );
+    return wantarray ? @files : \@files;
 }
 
 1;
@@ -107,6 +119,15 @@ This module is a shopping agent which can fetch products' data and sort them by 
     pick      => [ 'product', 'price', 'desc' ],
     
     proxy => 'http://foo.bar:1234/,
+
+    # Set up account information
+    login =>
+       {
+          driver_1 => {
+                         user => 'abuser',
+                         pass => 'cannot pass',
+                      },
+        },
     );
 
 
@@ -137,6 +158,10 @@ Then, it will returns a list of products' data.
 This module also exports a tool for listing existent merchant drivers in computer.
 
   print join $/, list_drivers;
+
+=head1 CAVEAT
+
+Alpha version.
 
 =head1 COPYRIGHT
 

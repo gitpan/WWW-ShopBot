@@ -1,7 +1,9 @@
 WWW/ShopBot version 0.01
 ========================
 
-WWW::ShopBot is a free shopping agent which offers a basic framework for programmers to build a custom price-comparison site, etc.
+- WWW::ShopBot is a free shopping agent which offers a basic framework for programmers to build a custom price-comparison site, etc.
+
+- Alpha version
 
 INSTALLATION
 

@@ -1,7 +1,9 @@
 use Test;
-BEGIN { plan tests => 3 };
+BEGIN { plan tests => 4 };
 use WWW::ShopBot qw/list_drivers/;
 ok(1);
+ok(join(q//, list_drivers), '_test_test::_test');
+
 $bot = new WWW::ShopBot(drivers => [ '_test', ]);
 push @pool,
     $bot->query(

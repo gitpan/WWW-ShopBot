@@ -4,4 +4,5 @@ Makefile.PL
 README
 ShopBot.pm
 WWW/ShopBot/_test.pm
+WWW/ShopBot/_test/_test.pm
 test.pl

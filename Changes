@@ -12,3 +12,7 @@ Revision history for Perl extension WWW::ShopBot.
 	- attribute(jar) add
 	- attribute(pick) removed
 	- driver's call OO-ified
+
+0.05  Wed, 12 Mar 2003 01:36:10 +0800
+	- list_drivers() fixed again. Driver.pm is excluded
+	- list_drivers_paths added

@@ -3,8 +3,8 @@ use 5.006;
 use strict;
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT_OK = qw(list_drivers);
-our $VERSION = '0.04';
+our @EXPORT_OK = qw(list_drivers list_drivers_paths);
+our $VERSION = '0.05';
 use Carp qw(confess);
 
 sub new {
@@ -65,7 +65,7 @@ sub query {
     my $criteria = ref($_[0]) ? $_[0] : @_ == 1 ? {product => $_[0]} : {@_};
     my (@pool, $result, $user, $pass);
     foreach my $driver (@{$pkg->{drivers}}){
-	$driver =~ s/^WWW::ShopBot:://;
+	$driver =~ s/^WWW::ShopBot:://o;
 	$user = $pkg->{login}->{$driver}->{user};
 	$pass = $pkg->{login}->{$driver}->{pass};
 	eval 'use WWW::ShopBot::'.$driver.';
@@ -88,8 +88,17 @@ sub query {
 
 use File::Find::Rule;
 sub list_drivers {
-    my @files = sort grep{$_} map{s,/,::,g;$_} map{m,WWW/ShopBot/(.+)\.pm,;$1}
-      File::Find::Rule->file()->name( '*.pm' )->in( map{$_.'/WWW/ShopBot/'} @INC );
+    my @files = 
+	sort grep{$_} grep{$_ ne 'Driver'} map{s,/,::,go;$_}
+    map{m,WWW/ShopBot/(.+)\.pm,o?$1:''}
+  File::Find::Rule->file()->name( '*.pm' )->in( map{$_.'/WWW/ShopBot/'} @INC );
+    return wantarray ? @files : \@files;
+}
+
+sub list_drivers_paths {
+    my @files = 
+	sort grep{$_} grep{$_ !~ 'WWW/ShopBot/Driver'}
+  File::Find::Rule->file()->name( '*.pm' )->in( map{$_.'/WWW/ShopBot/'} @INC );
     return wantarray ? @files : \@files;
 }
 
@@ -158,9 +167,22 @@ Then, it will returns a list of products' data.
 
 =head2 List drivers
 
-This module also exports a tool for listing existent merchant drivers in computer.
+This module also exports tools for listing existent merchant drivers in computer.
 
+=over 2
+
+=item * Simply print drivers' names
+
+  use WWW::ShopBot qw(list_drivers);
   print join $/, list_drivers;
+
+
+=item * Print drivers' names followed by their paths
+
+  use WWW::ShopBot qw(list_drivers_paths);
+  print join $/, list_drivers_paths;
+
+=back
 
 =head1 CAVEAT
 

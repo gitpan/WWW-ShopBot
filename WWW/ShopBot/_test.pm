@@ -1,8 +1,6 @@
 package WWW::ShopBot::_test;
 
-sub new {
-    bless $_[1], $_[0];
-}
+sub new { bless $_[1], $_[0] }
 
 sub query {
     shift;
@@ -23,19 +21,3 @@ sub query {
 }
 
 1;
-__END__
-# Below is stub documentation for your module. You better edit it!
-
-=head1 NAME
-
-WWW::ShopBot::_test - A testing module for WWW::ShopBot
-
-=head1 DESCRIPTION
-
-It is a testing module for WWW::ShopBot and for testing only. Please do not modify this submodule or use it.
-
-=head1 AUTHOR
-
-xern, E<lt>xern@cpan.orgE<gt>
-
-=cut

@@ -4,7 +4,7 @@ use strict;
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(list_drivers list_drivers_paths);
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 use Carp qw(confess);
 
 sub new {
@@ -15,7 +15,7 @@ sub new {
 	drivers   => (($arg->{drivers} ? $arg->{drivers} : $arg->{merchants}) || die "No drivers given at line $line in $0\n"),
 	proxy     => $arg->{proxy},
 	login     => $arg->{login},
-	jar       => $arg->{jar},
+	jar       => $arg->{jar} || "$ENV{HOME}/.www-shopbot.cookies.txt",
     }, $pkg;
 }
 
@@ -83,7 +83,7 @@ sub query {
 	push @pool, grep { scalar %$_ } @$result;';
 	confess "Driver error: $driver\n$@" if $@;
     }
-    return sort {$a->{price} <=> $b->{price}} @pool;
+    wantarray ? (sort {$a->{price} <=> $b->{price}} @pool) : [sort {$a->{price} <=> $b->{price}} @pool];
 }
 
 use File::Find::Rule;
@@ -139,7 +139,7 @@ This module is a shopping agent which can fetch products' data and sort them by 
         },
 
     # cookie jar
-    jar => "$ENV{HOME}/.cookies.txt",
+    jar => "$ENV{HOME}/.www-shopbot.cookies.txt",
     );
 
 
@@ -147,7 +147,7 @@ This module is a shopping agent which can fetch products' data and sort them by 
 
 Query will be sent to the given hosts.
 
-  $result = $bot->query('some product');
+  @result = $bot->query('some product');
 
 Or more specifically, you can do this.
 
@@ -163,7 +163,7 @@ Or more specifically, you can do this.
 			desc => \&my_desc_filter,
 			);
 
-Then, it will returns a list of products' data.
+Then, it will returns a list or a listref of products' data.
 
 =head2 List drivers
 

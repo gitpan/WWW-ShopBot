@@ -4,8 +4,9 @@ use strict;
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(list_drivers list_drivers_paths);
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 use Carp qw(confess);
+use HTTP::Cookies;
 
 sub new {
     my $pkg = shift;
@@ -15,7 +16,13 @@ sub new {
 	drivers   => (($arg->{drivers} ? $arg->{drivers} : $arg->{merchants}) || die "No drivers given at line $line in $0\n"),
 	proxy     => $arg->{proxy},
 	login     => $arg->{login},
-	jar       => $arg->{jar} || "$ENV{HOME}/.www-shopbot.cookies.txt",
+	jar       =>
+	    ref($arg->{jar}) ? $arg->{jar} :
+		new HTTP::Cookies(
+				  file => ($arg->{jar} ||
+					   "$ENV{HOME}/.www-shopbot.cookies.txt"),
+				  autosave => 1,
+				  ),
     }, $pkg;
 }
 

@@ -14,7 +14,6 @@ push @pool,
     $bot->query(
 		product => 'ibm',
 		);
-
 ok($pool[2]->{price}, 123);
 ok($pool[4]->{product}, 'qwer');
 ok($pool[3]->{driver}, '_test');

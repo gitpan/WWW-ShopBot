@@ -4,7 +4,7 @@ use strict;
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(list_drivers);
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 use Carp qw(confess);
 
 sub new {
@@ -13,9 +13,9 @@ sub new {
     my $line = (caller(0))[2];
     bless {
 	drivers   => (($arg->{drivers} ? $arg->{drivers} : $arg->{merchants}) || die "No drivers given at line $line in $0\n"),
-	pick      => $arg->{pick} || [ 'product', 'price' ],
 	proxy     => $arg->{proxy},
 	login     => $arg->{login},
+	jar       => $arg->{jar},
     }, $pkg;
 }
 
@@ -50,6 +50,7 @@ sub sift {
 	foreach my $f (keys %{$criteria}){
 	    next if $f =~ /^product$/io;
 	    next if $f =~ /^price$/io;
+	    next if ref($criteria->{$f}) ne 'CODE';
 	    unless( $criteria->{$f}->($r->{$f}) ){
 		$r = {};
 		next;
@@ -68,13 +69,16 @@ sub query {
 	$user = $pkg->{login}->{$driver}->{user};
 	$pass = $pkg->{login}->{$driver}->{pass};
 	eval 'use WWW::ShopBot::'.$driver.';
-	$result = WWW::ShopBot::'.$driver.'::query(
-                                  $criteria->{product},
-                                  $pkg->{proxy},
-                                  $user,
-                                  $pass,
-                                  $pkg->{jar},
-                                  );
+        my $bot = new WWW::ShopBot::'.$driver.'
+                       ({
+                          product => $criteria->{product},
+                          price => $criteria->{price},
+                          proxy => $pkg->{proxy},
+                          user => $user,
+                          pass => $pass,
+                          jar => $pkg->{jar},
+                       });
+	$result = $bot->query;
 	sift($result, $criteria, $driver);
 	push @pool, grep { scalar %$_ } @$result;';
 	confess "Driver error: $driver\n$@" if $@;
@@ -114,10 +118,6 @@ This module is a shopping agent which can fetch products' data and sort them by 
     # It will scan through directories for drivers
     drivers   => \@drivers,
 
-    # Recognized entries in an item's data
-    # 'product' and 'price' are the default.
-    pick      => [ 'product', 'price', 'desc' ],
-    
     proxy => 'http://foo.bar:1234/,
 
     # Set up account information
@@ -128,6 +128,9 @@ This module is a shopping agent which can fetch products' data and sort them by 
                          pass => 'cannot pass',
                       },
         },
+
+    # cookie jar
+    jar => "$ENV{HOME}/.cookies.txt",
     );
 
 

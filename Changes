@@ -4,3 +4,11 @@ Revision history for Perl extension WWW::ShopBot.
 	- original version; created by h2xs 1.21 with options
 		-XA WWW::ShopBot
 
+0.03  Mon, 10 Mar 2003 21:12:25 +0800
+	- list_drivers() fixed
+	- attribute(login) added
+
+0.04  Tue, 11 Mar 2003 02:40:29 +0800
+	- attribute(jar) add
+	- attribute(pick) removed
+	- driver's call OO-ified

@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan tests => 4 };
+BEGIN { plan tests => 5 };
 use WWW::ShopBot qw/list_drivers/;
 ok(1);
 ok(join(q//, list_drivers), '_test_test::_test');
@@ -16,3 +16,4 @@ push @pool,
 
 ok($pool[2]->{price}, 123);
 ok($pool[4]->{product}, 'qwer');
+ok($pool[3]->{driver}, '_test');
